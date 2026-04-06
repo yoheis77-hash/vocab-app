@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="英単語 中2">
+<title>英単語トレーニング 中2</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #7C4DFF;
+    --sky-dark: #512DA8;
+    --mint: #80CBC4;
+    --coral: #FF7043;
+    --gold: #FFD54F;
+    --bg: #F5F0FF;
+    --card: #ffffff;
+    --text: #1A1A2E;
+    --muted: #7A7A9A;
+    --shadow: 0 4px 20px rgba(80,40,180,0.10);
+    --radius: 20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: 'Noto Sans JP', sans-serif; color: var(--text); overflow: hidden; }
+
+  .screen { display: none; flex-direction: column; height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .screen.active { display: flex; }
+
+  /* HOME */
+  #home { background: linear-gradient(160deg, #1a0a3c 0%, #512DA8 50%, #7C4DFF 100%); color: white; align-items: center; padding: 0; }
+  .home-top { width: 100%; padding: 60px 24px 32px; text-align: center; }
+  .home-top .app-icon { font-size: 64px; margin-bottom: 8px; }
+  .home-top h1 { font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 900; letter-spacing: 1px; }
+  .home-top p { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+  .home-cards { width: 100%; padding: 0 16px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-mini { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 16px; padding: 16px; text-align: center; }
+  .stat-mini .num { font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 900; }
+  .stat-mini .label { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+  .home-btns { width: 100%; padding: 0 16px 32px; display: flex; flex-direction: column; gap: 12px; }
+  .btn-main { border: none; border-radius: 18px; padding: 18px; font-size: 17px; font-family: 'Nunito', sans-serif; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform .15s, opacity .15s; }
+  .btn-main:active { transform: scale(0.97); opacity: 0.9; }
+  .btn-train { background: white; color: var(--sky-dark); }
+  .btn-weak { background: var(--coral); color: white; }
+  .btn-stats { background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.4); }
+  .btn-words { background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.4); }
+
+  /* QUIZ */
+  #quiz { background: var(--bg); }
+  .quiz-header { display: flex; align-items: center; padding: 56px 16px 16px; gap: 12px; }
+  .back-btn { width: 40px; height: 40px; border-radius: 12px; border: none; background: white; box-shadow: var(--shadow); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .quiz-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 16px; flex: 1; }
+  .quiz-prog-wrap { padding: 0 16px 16px; }
+  .prog-bar { height: 8px; background: #ddd6f5; border-radius: 99px; overflow: hidden; }
+  .prog-fill { height: 100%; background: linear-gradient(90deg, var(--sky), var(--sky-dark)); border-radius: 99px; transition: width .4s ease; }
+  .prog-label { font-size: 12px; color: var(--muted); margin-top: 4px; text-align: right; }
+  .card-wrap { padding: 0 16px; flex: 1; }
+  .word-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px 24px; text-align: center; margin-bottom: 20px; }
+  .word-card .word-en { font-family: 'Nunito', sans-serif; font-size: 42px; font-weight: 900; color: var(--sky-dark); letter-spacing: 1px; }
+  .word-card .word-hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .choices { display: flex; flex-direction: column; gap: 10px; padding: 0 16px 32px; }
+  .choice-btn { border: 2.5px solid #ddd6f5; background: white; border-radius: 14px; padding: 16px 20px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; text-align: left; transition: all .15s; }
+  .choice-btn:active { transform: scale(0.98); }
+  .choice-btn.correct { background: #E8F5E9; border-color: #66BB6A; color: #2E7D32; }
+  .choice-btn.wrong { background: #FFEBEE; border-color: #EF5350; color: #C62828; }
+  .choice-btn.reveal { background: #E8F5E9; border-color: #66BB6A; color: #2E7D32; }
+
+  /* RESULT */
+  #result { background: var(--bg); align-items: center; justify-content: center; }
+  .result-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 40px 32px; margin: 24px; text-align: center; width: calc(100% - 48px); }
+  .result-emoji { font-size: 64px; margin-bottom: 12px; }
+  .result-title { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+  .result-score { font-size: 48px; font-family: 'Nunito', sans-serif; font-weight: 900; color: var(--sky-dark); }
+  .result-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+  .result-btns { display: flex; flex-direction: column; gap: 12px; }
+  .btn-sm { border: none; border-radius: 14px; padding: 14px; font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer; transition: transform .15s; }
+  .btn-sm:active { transform: scale(0.97); }
+  .btn-again { background: var(--sky-dark); color: white; }
+  .btn-home2 { background: #EEE8FF; color: var(--text); }
+
+  /* STATS */
+  #stats { background: var(--bg); }
+  .stats-header { display: flex; align-items: center; padding: 56px 16px 16px; gap: 12px; }
+  .stats-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; }
+  .stats-body { padding: 0 16px 32px; display: flex; flex-direction: column; gap: 14px; }
+  .stats-section { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+  .stats-section h3 { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0ecff; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .s-label { font-size: 14px; }
+  .stat-row .s-val { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 18px; color: var(--sky-dark); }
+  .week-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar-bg { width: 100%; background: #EEE8FF; border-radius: 8px 8px 0 0; position: relative; height: 60px; display: flex; align-items: flex-end; }
+  .bar-fill { width: 100%; border-radius: 8px 8px 0 0; background: linear-gradient(180deg, var(--sky) 0%, var(--sky-dark) 100%); transition: height .5s ease; }
+  .bar-day { font-size: 10px; color: var(--muted); }
+  .weak-list { display: flex; flex-direction: column; gap: 8px; }
+  .weak-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #FFF3EE; border-radius: 12px; }
+  .weak-item .w-en { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 16px; color: var(--coral); }
+  .weak-item .w-jp { font-size: 13px; color: var(--muted); }
+  .weak-item .w-count { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; color: var(--coral); background: #FFD5C8; border-radius: 8px; padding: 2px 8px; }
+
+  /* WORD LIST */
+  #wordlist { background: var(--bg); }
+  .wl-header { display: flex; align-items: center; padding: 56px 16px 16px; gap: 12px; }
+  .wl-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; flex: 1; }
+  .wl-search { margin: 0 16px 12px; background: white; border-radius: 14px; padding: 12px 16px; border: 2px solid #ddd6f5; font-size: 15px; width: calc(100% - 32px); outline: none; font-family: 'Noto Sans JP', sans-serif; }
+  .wl-list { padding: 0 16px 32px; display: flex; flex-direction: column; gap: 8px; }
+  .wl-item { background: white; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(80,40,180,0.07); }
+  .wl-item .wi-en { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 17px; }
+  .wl-item .wi-jp { font-size: 13px; color: var(--muted); }
+  .wl-item .wi-badge { font-size: 11px; border-radius: 8px; padding: 2px 8px; font-family: 'Nunito', sans-serif; font-weight: 700; }
+  .badge-weak { background: #FFEBEE; color: #C62828; }
+  .badge-ok { background: #E8F5E9; color: #2E7D32; }
+  .badge-new { background: #EDE7FF; color: #512DA8; }
+
+  .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1A1A2E; color: white; border-radius: 12px; padding: 12px 24px; font-size: 14px; opacity: 0; transition: all .3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <div class="home-top">
+    <div class="app-icon">🚀</div>
+    <h1>英単語トレーニング</h1>
+    <p>中学2年生レベル · 全<span id="total-words">0</span>語</p>
+  </div>
+  <div class="home-cards">
+    <div class="stat-mini"><div class="num" id="h-today-ans">0</div><div class="label">今日の回答数</div></div>
+    <div class="stat-mini"><div class="num" id="h-today-acc">-</div><div class="label">今日の正答率</div></div>
+    <div class="stat-mini"><div class="num" id="h-weak-cnt">0</div><div class="label">苦手単語</div></div>
+    <div class="stat-mini"><div class="num" id="h-streak">0</div><div class="label">連続学習日数</div></div>
+  </div>
+  <div class="home-btns">
+    <button class="btn-main btn-train" onclick="startQuiz('all')">🎯 通常テスト</button>
+    <button class="btn-main btn-weak" onclick="startQuiz('weak')">🔥 苦手単語テスト</button>
+    <button class="btn-main btn-stats" onclick="showScreen('stats')">📊 学習記録</button>
+    <button class="btn-main btn-words" onclick="showScreen('wordlist')">📖 単語一覧</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="quiz-title" id="quiz-mode-label">通常テスト</div>
+    <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;color:var(--sky-dark);" id="quiz-score-live">0/0</div>
+  </div>
+  <div class="quiz-prog-wrap">
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="prog-label" id="prog-label">0 / 10</div>
+  </div>
+  <div class="card-wrap">
+    <div class="word-card">
+      <div class="word-en" id="quiz-word">abroad</div>
+      <div class="word-hint" id="quiz-hint">品詞: 副詞</div>
+    </div>
+  </div>
+  <div class="choices" id="choices"></div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen">
+  <div class="result-card">
+    <div class="result-emoji" id="res-emoji">🎉</div>
+    <div class="result-title" id="res-title">お疲れ様！</div>
+    <div class="result-score" id="res-score">8/10</div>
+    <div class="result-sub" id="res-sub">正答率 80%</div>
+    <div class="result-btns">
+      <button class="btn-sm btn-again" onclick="retryQuiz()">🔄 もう一度</button>
+      <button class="btn-sm btn-home2" onclick="showScreen('home')">🏠 ホームへ</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div id="stats" class="screen">
+  <div class="stats-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="stats-title">学習記録</div>
+  </div>
+  <div class="stats-body">
+    <div class="stats-section">
+      <h3>今日</h3>
+      <div class="stat-row"><span class="s-label">⏱ 利用時間</span><span class="s-val" id="s-time">0分</span></div>
+      <div class="stat-row"><span class="s-label">📝 回答数</span><span class="s-val" id="s-ans">0問</span></div>
+      <div class="stat-row"><span class="s-label">✅ 正解数</span><span class="s-val" id="s-correct">0問</span></div>
+      <div class="stat-row"><span class="s-label">🎯 正答率</span><span class="s-val" id="s-acc">-%</span></div>
+    </div>
+    <div class="stats-section">
+      <h3>今週の回答数</h3>
+      <div class="week-chart" id="week-chart"></div>
+    </div>
+    <div class="stats-section">
+      <h3>累計</h3>
+      <div class="stat-row"><span class="s-label">📅 学習日数</span><span class="s-val" id="s-days">0日</span></div>
+      <div class="stat-row"><span class="s-label">📝 総回答数</span><span class="s-val" id="s-total">0問</span></div>
+      <div class="stat-row"><span class="s-label">🏆 最高正答率</span><span class="s-val" id="s-best">-%</span></div>
+    </div>
+    <div class="stats-section">
+      <h3>苦手単語 TOP5</h3>
+      <div class="weak-list" id="weak-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- WORD LIST -->
+<div id="wordlist" class="screen">
+  <div class="wl-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="wl-title">単語一覧</div>
+  </div>
+  <input class="wl-search" id="wl-search" type="text" placeholder="🔍 単語を検索..." oninput="filterWords()" />
+  <div class="wl-list" id="wl-list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 中2英単語データ =====
+const WORDS = [
+  // 動詞
+  {en:"agree",jp:"同意する",pos:"動詞"},{en:"arrive",jp:"到着する",pos:"動詞"},{en:"ask",jp:"尋ねる・頼む",pos:"動詞"},
+  {en:"become",jp:"〜になる",pos:"動詞"},{en:"begin",jp:"始まる・始める",pos:"動詞"},{en:"believe",jp:"信じる",pos:"動詞"},
+  {en:"bring",jp:"持ってくる",pos:"動詞"},{en:"build",jp:"建てる",pos:"動詞"},{en:"buy",jp:"買う",pos:"動詞"},
+  {en:"call",jp:"呼ぶ・電話する",pos:"動詞"},{en:"carry",jp:"運ぶ",pos:"動詞"},{en:"change",jp:"変える",pos:"動詞"},
+  {en:"check",jp:"確認する",pos:"動詞"},{en:"clean",jp:"掃除する",pos:"動詞"},{en:"collect",jp:"集める",pos:"動詞"},
+  {en:"cook",jp:"料理する",pos:"動詞"},{en:"cry",jp:"泣く",pos:"動詞"},{en:"cut",jp:"切る",pos:"動詞"},
+  {en:"decide",jp:"決める",pos:"動詞"},{en:"describe",jp:"説明する",pos:"動詞"},{en:"enjoy",jp:"楽しむ",pos:"動詞"},
+  {en:"enter",jp:"入る",pos:"動詞"},{en:"explain",jp:"説明する",pos:"動詞"},{en:"feel",jp:"感じる",pos:"動詞"},
+  {en:"find",jp:"見つける",pos:"動詞"},{en:"finish",jp:"終える",pos:"動詞"},{en:"fly",jp:"飛ぶ",pos:"動詞"},
+  {en:"forget",jp:"忘れる",pos:"動詞"},{en:"get",jp:"得る・なる",pos:"動詞"},{en:"grow",jp:"育つ・育てる",pos:"動詞"},
+  {en:"happen",jp:"起こる",pos:"動詞"},{en:"hear",jp:"聞こえる",pos:"動詞"},{en:"help",jp:"助ける",pos:"動詞"},
+  {en:"hold",jp:"持つ・開催する",pos:"動詞"},{en:"hope",jp:"望む",pos:"動詞"},{en:"invite",jp:"招待する",pos:"動詞"},
+  {en:"join",jp:"参加する",pos:"動詞"},{en:"jump",jp:"跳ぶ",pos:"動詞"},{en:"keep",jp:"保つ・続ける",pos:"動詞"},
+  {en:"laugh",jp:"笑う",pos:"動詞"},{en:"learn",jp:"学ぶ",pos:"動詞"},{en:"leave",jp:"去る・出発する",pos:"動詞"},
+  {en:"live",jp:"住む・生きる",pos:"動詞"},{en:"look",jp:"見る・〜に見える",pos:"動詞"},{en:"lose",jp:"失う・負ける",pos:"動詞"},
+  {en:"love",jp:"愛する",pos:"動詞"},{en:"meet",jp:"会う",pos:"動詞"},{en:"move",jp:"動く・引っ越す",pos:"動詞"},
+  {en:"need",jp:"必要とする",pos:"動詞"},{en:"practice",jp:"練習する",pos:"動詞"},{en:"prepare",jp:"準備する",pos:"動詞"},
+  {en:"protect",jp:"守る",pos:"動詞"},{en:"put",jp:"置く",pos:"動詞"},{en:"receive",jp:"受け取る",pos:"動詞"},
+  {en:"remember",jp:"覚えている",pos:"動詞"},{en:"return",jp:"戻る・返す",pos:"動詞"},{en:"save",jp:"救う・節約する",pos:"動詞"},
+  {en:"sell",jp:"売る",pos:"動詞"},{en:"send",jp:"送る",pos:"動詞"},{en:"show",jp:"見せる",pos:"動詞"},
+  {en:"sing",jp:"歌う",pos:"動詞"},{en:"sleep",jp:"眠る",pos:"動詞"},{en:"smell",jp:"においがする",pos:"動詞"},
+  {en:"sound",jp:"〜に聞こえる",pos:"動詞"},{en:"stand",jp:"立つ",pos:"動詞"},{en:"start",jp:"始める",pos:"動詞"},
+  {en:"stay",jp:"滞在する",pos:"動詞"},{en:"stop",jp:"止まる・やめる",pos:"動詞"},{en:"taste",jp:"味がする",pos:"動詞"},
+  {en:"teach",jp:"教える",pos:"動詞"},{en:"tell",jp:"伝える・話す",pos:"動詞"},{en:"throw",jp:"投げる",pos:"動詞"},
+  {en:"try",jp:"試みる",pos:"動詞"},{en:"turn",jp:"回る・曲がる",pos:"動詞"},{en:"understand",jp:"理解する",pos:"動詞"},
+  {en:"visit",jp:"訪れる",pos:"動詞"},{en:"wait",jp:"待つ",pos:"動詞"},{en:"walk",jp:"歩く",pos:"動詞"},
+  {en:"win",jp:"勝つ",pos:"動詞"},{en:"wish",jp:"願う",pos:"動詞"},{en:"work",jp:"働く・機能する",pos:"動詞"},
+  {en:"worry",jp:"心配する",pos:"動詞"},
+  // 名詞
+  {en:"abroad",jp:"海外",pos:"副詞/名詞"},{en:"accident",jp:"事故",pos:"名詞"},{en:"advice",jp:"アドバイス",pos:"名詞"},
+  {en:"age",jp:"年齢・時代",pos:"名詞"},{en:"air",jp:"空気",pos:"名詞"},{en:"animal",jp:"動物",pos:"名詞"},
+  {en:"area",jp:"地域・分野",pos:"名詞"},{en:"bag",jp:"かばん",pos:"名詞"},{en:"ball",jp:"ボール",pos:"名詞"},
+  {en:"beach",jp:"浜辺",pos:"名詞"},{en:"bed",jp:"ベッド",pos:"名詞"},{en:"bridge",jp:"橋",pos:"名詞"},
+  {en:"bus",jp:"バス",pos:"名詞"},{en:"city",jp:"都市",pos:"名詞"},{en:"class",jp:"授業・クラス",pos:"名詞"},
+  {en:"club",jp:"クラブ",pos:"名詞"},{en:"color",jp:"色",pos:"名詞"},{en:"contest",jp:"コンテスト",pos:"名詞"},
+  {en:"country",jp:"国・田舎",pos:"名詞"},{en:"culture",jp:"文化",pos:"名詞"},{en:"dream",jp:"夢",pos:"名詞"},
+  {en:"earth",jp:"地球・土",pos:"名詞"},{en:"environment",jp:"環境",pos:"名詞"},{en:"event",jp:"行事",pos:"名詞"},
+  {en:"example",jp:"例",pos:"名詞"},{en:"experience",jp:"経験",pos:"名詞"},{en:"food",jp:"食べ物",pos:"名詞"},
+  {en:"forest",jp:"森",pos:"名詞"},{en:"future",jp:"未来",pos:"名詞"},{en:"game",jp:"試合・ゲーム",pos:"名詞"},
+  {en:"garden",jp:"庭",pos:"名詞"},{en:"gift",jp:"贈り物",pos:"名詞"},{en:"grade",jp:"成績・学年",pos:"名詞"},
+  {en:"group",jp:"グループ",pos:"名詞"},{en:"heart",jp:"心・心臓",pos:"名詞"},{en:"history",jp:"歴史",pos:"名詞"},
+  {en:"hospital",jp:"病院",pos:"名詞"},{en:"hotel",jp:"ホテル",pos:"名詞"},{en:"idea",jp:"考え",pos:"名詞"},
+  {en:"island",jp:"島",pos:"名詞"},{en:"job",jp:"仕事",pos:"名詞"},{en:"language",jp:"言語",pos:"名詞"},
+  {en:"letter",jp:"手紙・文字",pos:"名詞"},{en:"life",jp:"人生・生活",pos:"名詞"},{en:"market",jp:"市場",pos:"名詞"},
+  {en:"member",jp:"メンバー",pos:"名詞"},{en:"message",jp:"メッセージ",pos:"名詞"},{en:"mountain",jp:"山",pos:"名詞"},
+  {en:"museum",jp:"博物館",pos:"名詞"},{en:"music",jp:"音楽",pos:"名詞"},{en:"nature",jp:"自然",pos:"名詞"},
+  {en:"news",jp:"ニュース",pos:"名詞"},{en:"newspaper",jp:"新聞",pos:"名詞"},{en:"park",jp:"公園",pos:"名詞"},
+  {en:"party",jp:"パーティー",pos:"名詞"},{en:"picture",jp:"絵・写真",pos:"名詞"},{en:"place",jp:"場所",pos:"名詞"},
+  {en:"plan",jp:"計画",pos:"名詞"},{en:"planet",jp:"惑星",pos:"名詞"},{en:"plant",jp:"植物",pos:"名詞"},
+  {en:"point",jp:"点・ポイント",pos:"名詞"},{en:"population",jp:"人口",pos:"名詞"},{en:"poster",jp:"ポスター",pos:"名詞"},
+  {en:"problem",jp:"問題",pos:"名詞"},{en:"program",jp:"プログラム",pos:"名詞"},{en:"project",jp:"プロジェクト",pos:"名詞"},
+  {en:"question",jp:"質問",pos:"名詞"},{en:"reason",jp:"理由",pos:"名詞"},{en:"river",jp:"川",pos:"名詞"},
+  {en:"road",jp:"道路",pos:"名詞"},{en:"sea",jp:"海",pos:"名詞"},{en:"season",jp:"季節",pos:"名詞"},
+  {en:"sign",jp:"標識・サイン",pos:"名詞"},{en:"sky",jp:"空",pos:"名詞"},{en:"society",jp:"社会",pos:"名詞"},
+  {en:"song",jp:"歌",pos:"名詞"},{en:"sport",jp:"スポーツ",pos:"名詞"},{en:"station",jp:"駅",pos:"名詞"},
+  {en:"story",jp:"話・物語",pos:"名詞"},{en:"street",jp:"通り",pos:"名詞"},{en:"subject",jp:"科目・話題",pos:"名詞"},
+  {en:"temple",jp:"寺",pos:"名詞"},{en:"time",jp:"時間・回",pos:"名詞"},{en:"town",jp:"町",pos:"名詞"},
+  {en:"tradition",jp:"伝統",pos:"名詞"},{en:"trip",jp:"旅行",pos:"名詞"},{en:"village",jp:"村",pos:"名詞"},
+  {en:"volunteer",jp:"ボランティア",pos:"名詞"},{en:"way",jp:"方法・道",pos:"名詞"},{en:"weather",jp:"天気",pos:"名詞"},
+  {en:"website",jp:"ウェブサイト",pos:"名詞"},{en:"word",jp:"単語・言葉",pos:"名詞"},{en:"world",jp:"世界",pos:"名詞"},
+  // 形容詞・副詞
+  {en:"afraid",jp:"恐れている",pos:"形容詞"},{en:"alone",jp:"一人で",pos:"形容詞/副詞"},{en:"already",jp:"すでに",pos:"副詞"},
+  {en:"always",jp:"いつも",pos:"副詞"},{en:"angry",jp:"怒っている",pos:"形容詞"},{en:"around",jp:"〜の周りに",pos:"副詞/前置詞"},
+  {en:"away",jp:"離れて",pos:"副詞"},{en:"careful",jp:"注意深い",pos:"形容詞"},{en:"cheap",jp:"安い",pos:"形容詞"},
+  {en:"clean",jp:"きれいな",pos:"形容詞"},{en:"clear",jp:"明確な・晴れた",pos:"形容詞"},{en:"crowded",jp:"混んでいる",pos:"形容詞"},
+  {en:"dangerous",jp:"危険な",pos:"形容詞"},{en:"different",jp:"異なる",pos:"形容詞"},{en:"difficult",jp:"難しい",pos:"形容詞"},
+  {en:"excited",jp:"興奮した",pos:"形容詞"},{en:"exciting",jp:"わくわくする",pos:"形容詞"},{en:"expensive",jp:"高価な",pos:"形容詞"},
+  {en:"famous",jp:"有名な",pos:"形容詞"},{en:"fine",jp:"元気な・良い",pos:"形容詞"},{en:"foreign",jp:"外国の",pos:"形容詞"},
+  {en:"free",jp:"自由な・無料の",pos:"形容詞"},{en:"friendly",jp:"親切な",pos:"形容詞"},{en:"glad",jp:"嬉しい",pos:"形容詞"},
+  {en:"great",jp:"すばらしい",pos:"形容詞"},{en:"healthy",jp:"健康的な",pos:"形容詞"},{en:"important",jp:"重要な",pos:"形容詞"},
+  {en:"interesting",jp:"興味深い",pos:"形容詞"},{en:"kind",jp:"親切な",pos:"形容詞"},{en:"large",jp:"大きい",pos:"形容詞"},
+  {en:"late",jp:"遅い・遅れた",pos:"形容詞"},{en:"local",jp:"地元の",pos:"形容詞"},{en:"lucky",jp:"幸運な",pos:"形容詞"},
+  {en:"maybe",jp:"たぶん",pos:"副詞"},{en:"never",jp:"決して〜ない",pos:"副詞"},{en:"often",jp:"しばしば",pos:"副詞"},
+  {en:"only",jp:"〜だけ",pos:"副詞/形容詞"},{en:"other",jp:"他の",pos:"形容詞"},{en:"popular",jp:"人気のある",pos:"形容詞"},
+  {en:"possible",jp:"可能な",pos:"形容詞"},{en:"proud",jp:"誇りに思う",pos:"形容詞"},{en:"quiet",jp:"静かな",pos:"形容詞"},
+  {en:"ready",jp:"準備ができた",pos:"形容詞"},{en:"safe",jp:"安全な",pos:"形容詞"},{en:"same",jp:"同じ",pos:"形容詞"},
+  {en:"sick",jp:"病気の",pos:"形容詞"},{en:"simple",jp:"簡単な・単純な",pos:"形容詞"},{en:"smart",jp:"賢い",pos:"形容詞"},
+  {en:"sometimes",jp:"時々",pos:"副詞"},{en:"sorry",jp:"申し訳ない",pos:"形容詞"},{en:"special",jp:"特別な",pos:"形容詞"},
+  {en:"strong",jp:"強い",pos:"形容詞"},{en:"surprised",jp:"驚いた",pos:"形容詞"},{en:"tired",jp:"疲れた",pos:"形容詞"},
+  {en:"together",jp:"一緒に",pos:"副詞"},{en:"traditional",jp:"伝統的な",pos:"形容詞"},{en:"true",jp:"本当の",pos:"形容詞"},
+  {en:"useful",jp:"役に立つ",pos:"形容詞"},{en:"usually",jp:"たいてい",pos:"副詞"},{en:"wonderful",jp:"すばらしい",pos:"形容詞"},
+  {en:"worried",jp:"心配している",pos:"形容詞"},{en:"young",jp:"若い",pos:"形容詞"}
+];
+
+// ===== ストレージ =====
+const STORE_KEY = 'vocab_app_j2_data';
+function loadData() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } }
+function saveData(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function getData() {
+  const d = loadData();
+  if (!d.days) d.days = {};
+  if (!d.mistakes) d.mistakes = {};
+  if (!d.totalAns) d.totalAns = 0;
+  if (!d.totalCorrect) d.totalCorrect = 0;
+  if (!d.bestAcc) d.bestAcc = 0;
+  if (!d.streak) d.streak = 0;
+  if (!d.lastDate) d.lastDate = '';
+  const tk = todayKey();
+  if (!d.days[tk]) d.days[tk] = {ans:0,correct:0,time:0};
+  return d;
+}
+
+setInterval(() => { const d=getData(); d.days[todayKey()].time=(d.days[todayKey()].time||0)+1; saveData(d); }, 60000);
+
+function updateStreak() {
+  const d=getData(), tk=todayKey();
+  if (d.lastDate===tk) return;
+  const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yk=yesterday.toISOString().slice(0,10);
+  if (d.lastDate===yk) d.streak=(d.streak||0)+1;
+  else if (d.lastDate!==tk) d.streak=1;
+  d.lastDate=tk; saveData(d);
+}
+updateStreak();
+
+let quizWords=[], quizIdx=0, quizCorrect=0, quizMode='all', lastQuizMode='all';
+
+function shuffle(arr) {
+  const a=[...arr];
+  for (let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function startQuiz(mode) {
+  quizMode=mode;
+  const d=getData();
+  let pool;
+  if (mode==='weak') {
+    pool=WORDS.filter(w=>(d.mistakes[w.en]||0)>=2);
+    if (pool.length<4) { showToast('苦手単語が少ないです。もっと練習してね！'); return; }
+  } else { pool=[...WORDS]; }
+  quizWords=shuffle(pool).slice(0,Math.min(10,pool.length));
+  quizIdx=0; quizCorrect=0;
+  document.getElementById('quiz-mode-label').textContent=mode==='weak'?'苦手単語テスト':'通常テスト';
+  showScreen('quiz'); renderQuestion();
+}
+
+function retryQuiz() { startQuiz(lastQuizMode); }
+
+function renderQuestion() {
+  const total=quizWords.length;
+  document.getElementById('prog-fill').style.width=((quizIdx/total)*100)+'%';
+  document.getElementById('prog-label').textContent=quizIdx+' / '+total;
+  document.getElementById('quiz-score-live').textContent=quizCorrect+'/'+total;
+  const w=quizWords[quizIdx];
+  document.getElementById('quiz-word').textContent=w.en;
+  document.getElementById('quiz-hint').textContent='品詞: '+w.pos;
+  const wrongs=shuffle(WORDS.filter(x=>x.en!==w.en)).slice(0,3);
+  const opts=shuffle([w,...wrongs]);
+  const choicesEl=document.getElementById('choices');
+  choicesEl.innerHTML='';
+  opts.forEach(opt => {
+    const btn=document.createElement('button'); btn.className='choice-btn'; btn.textContent=opt.jp;
+    btn.onclick=()=>selectAnswer(btn,opt.en===w.en,w.en,opts,w);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function selectAnswer(btn,isCorrect,wordEn,opts,word) {
+  document.querySelectorAll('.choice-btn').forEach(b=>b.onclick=null);
+  const d=getData(), tk=todayKey();
+  d.days[tk].ans++; d.totalAns++;
+  if (isCorrect) { btn.classList.add('correct'); quizCorrect++; d.days[tk].correct++; d.totalCorrect++; }
+  else {
+    btn.classList.add('wrong'); d.mistakes[wordEn]=(d.mistakes[wordEn]||0)+1;
+    document.querySelectorAll('.choice-btn').forEach(b=>{ if(b.textContent===word.jp) b.classList.add('reveal'); });
+  }
+  saveData(d);
+  setTimeout(()=>{ quizIdx++; if(quizIdx>=quizWords.length) showResult(); else renderQuestion(); }, 900);
+}
+
+function showResult() {
+  lastQuizMode=quizMode;
+  const total=quizWords.length, pct=Math.round((quizCorrect/total)*100);
+  const d=getData(); if(pct>d.bestAcc){d.bestAcc=pct;saveData(d);}
+  let emoji='🎉',title='すごい！完璧！';
+  if(pct<50){emoji='😢';title='もう少し頑張ろう！';}
+  else if(pct<70){emoji='😊';title='もう一息！';}
+  else if(pct<90){emoji='👍';title='よくできました！';}
+  document.getElementById('res-emoji').textContent=emoji;
+  document.getElementById('res-title').textContent=title;
+  document.getElementById('res-score').textContent=quizCorrect+'/'+total;
+  document.getElementById('res-sub').textContent='正答率 '+pct+'%';
+  showScreen('result'); refreshHome();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='stats') renderStats();
+  if(id==='wordlist') renderWordList();
+  if(id==='home') refreshHome();
+  document.getElementById(id).scrollTop=0;
+}
+
+function refreshHome() {
+  const d=getData(), tk=todayKey(), day=d.days[tk]||{ans:0,correct:0,time:0};
+  document.getElementById('h-today-ans').textContent=day.ans;
+  document.getElementById('h-today-acc').textContent=day.ans>0?Math.round((day.correct/day.ans)*100)+'%':'-';
+  document.getElementById('h-weak-cnt').textContent=Object.values(d.mistakes||{}).filter(v=>v>=2).length;
+  document.getElementById('h-streak').textContent=(d.streak||0)+'日';
+  document.getElementById('total-words').textContent=WORDS.length;
+}
+
+function renderStats() {
+  const d=getData(), tk=todayKey(), day=d.days[tk]||{ans:0,correct:0,time:0};
+  document.getElementById('s-time').textContent=(day.time||0)+'分';
+  document.getElementById('s-ans').textContent=day.ans+'問';
+  document.getElementById('s-correct').textContent=(day.correct||0)+'問';
+  document.getElementById('s-acc').textContent=day.ans>0?Math.round((day.correct/day.ans)*100)+'%':'-%';
+  document.getElementById('s-days').textContent=Object.keys(d.days||{}).length+'日';
+  document.getElementById('s-total').textContent=(d.totalAns||0)+'問';
+  document.getElementById('s-best').textContent=(d.bestAcc||0)+'%';
+  const chart=document.getElementById('week-chart'); chart.innerHTML='';
+  const days=['日','月','火','水','木','金','土'], today=new Date();
+  let maxAns=1; const weekData=[];
+  for(let i=6;i>=0;i--){ const dt=new Date(today); dt.setDate(dt.getDate()-i); const key=dt.toISOString().slice(0,10); const ans=(d.days[key]||{}).ans||0; if(ans>maxAns)maxAns=ans; weekData.push({day:days[dt.getDay()],ans}); }
+  weekData.forEach(item=>{ const col=document.createElement('div'); col.className='bar-col'; const bg=document.createElement('div'); bg.className='bar-bg'; const fill=document.createElement('div'); fill.className='bar-fill'; fill.style.height=Math.round((item.ans/maxAns)*100)+'%'; bg.appendChild(fill); const label=document.createElement('div'); label.className='bar-day'; label.textContent=item.day; col.appendChild(bg); col.appendChild(label); chart.appendChild(col); });
+  const wl=document.getElementById('weak-list'); wl.innerHTML='';
+  const sorted=Object.entries(d.mistakes||{}).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(sorted.length===0){ wl.innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:8px">まだデータがありません</div>'; return; }
+  sorted.forEach(([en,cnt])=>{ const word=WORDS.find(w=>w.en===en); if(!word)return; const item=document.createElement('div'); item.className='weak-item'; item.innerHTML=`<div><div class="w-en">${word.en}</div><div class="w-jp">${word.jp}</div></div><div class="w-count">${cnt}回ミス</div>`; wl.appendChild(item); });
+}
+
+function renderWordList(filter='') {
+  const d=getData(), list=document.getElementById('wl-list'); list.innerHTML='';
+  const query=filter.toLowerCase();
+  WORDS.filter(w=>!query||w.en.includes(query)||w.jp.includes(query)).forEach(w=>{
+    const mis=d.mistakes[w.en]||0;
+    const item=document.createElement('div'); item.className='wl-item';
+    let badgeClass='badge-new', badgeText='未挑戦';
+    if(mis>=2){badgeClass='badge-weak';badgeText='苦手 '+mis+'回';}
+    else if(mis===1){badgeClass='badge-weak';badgeText='注意 1回';}
+    else if(mis===0&&d.totalAns>0){badgeClass='badge-ok';badgeText='OK';}
+    item.innerHTML=`<div><div class="wi-en">${w.en}</div><div class="wi-jp">${w.jp}</div></div><div class="wi-badge ${badgeClass}">${badgeText}</div>`;
+    list.appendChild(item);
+  });
+}
+
+function filterWords() { renderWordList(document.getElementById('wl-search').value); }
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+refreshHome();
+</script>
+</body>
+</html>
