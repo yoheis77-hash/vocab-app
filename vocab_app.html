@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英単語学習アプリ (p.12-51)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    background: #f5f1eb;
+    color: #333;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  header {
+    background: linear-gradient(135deg, #ff9642, #ff6b35);
+    color: white;
+    padding: 20px;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  header h1 { font-size: 1.3rem; margin-bottom: 4px; }
+  header p { font-size: 0.85rem; opacity: 0.9; }
+  .stats { display: flex; gap: 12px; margin-top: 12px; font-size: 0.8rem; }
+  .stat { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; }
+  nav {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    background: white;
+    border-bottom: 1px solid #eee;
+  }
+  nav button {
+    padding: 14px 4px;
+    border: none;
+    background: white;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    font-family: inherit;
+    color: #666;
+  }
+  nav button:hover { background: #fafafa; }
+  nav button.active {
+    color: #ff6b35;
+    border-bottom-color: #ff6b35;
+    font-weight: 600;
+  }
+  main {
+    background: white;
+    padding: 24px 20px;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-height: 400px;
+  }
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-row label { font-size: 0.85rem; color: #666; }
+  select, button.btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.btn-primary { background: #ff6b35; color: white; border-color: #ff6b35; }
+  button.btn-primary:hover { background: #ff5722; }
+  button.btn-secondary { background: #f5f1eb; }
+  .card {
+    padding: 20px;
+    border: 2px solid #ffe4d4;
+    border-radius: 12px;
+    background: #fffaf5;
+    margin-bottom: 16px;
+  }
+  .item-num {
+    display: inline-block;
+    background: #ff6b35;
+    color: white;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .page-label {
+    display: inline-block;
+    background: #888;
+    color: white;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    margin-left: 6px;
+  }
+  .jp-sentence { font-size: 1.05rem; margin-bottom: 10px; line-height: 1.6; }
+  .en-sentence { font-size: 1.15rem; font-weight: 500; color: #222; margin-bottom: 16px; line-height: 1.6; }
+  .answer-box {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    margin-bottom: 10px;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 12px 14px;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    outline: none;
+  }
+  input[type="text"]:focus { border-color: #ff6b35; }
+  input[type="text"].correct { border-color: #4caf50; background: #f1f8e9; }
+  input[type="text"].wrong { border-color: #f44336; background: #fff3e0; }
+  .feedback {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+  .feedback.correct { background: #e8f5e9; color: #2e7d32; }
+  .feedback.wrong { background: #ffebee; color: #c62828; }
+  .feedback.reveal { background: #fff8e1; color: #795548; }
+  .controls {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+  .controls-left, .controls-right { display: flex; gap: 8px; }
+  .progress-bar {
+    height: 6px;
+    background: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff9642, #ff6b35);
+    transition: width 0.3s;
+  }
+  .browse-list { display: flex; flex-direction: column; gap: 8px; }
+  .browse-item {
+    padding: 12px 14px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: white;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .browse-item .num { color: #ff6b35; font-weight: 600; font-size: 0.85rem; }
+  .browse-item .jp { font-size: 0.9rem; color: #666; }
+  .browse-item .ans { font-weight: 600; color: #333; }
+  .browse-item.wrong-marked { background: #fff8e1; }
+  .flashcard {
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 28px 20px;
+    cursor: pointer;
+    user-select: none;
+    border: 2px solid #ffe4d4;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fffaf5, #fff3e0);
+    margin-bottom: 16px;
+    text-align: center;
+    transition: transform 0.15s;
+  }
+  .flashcard:hover { transform: translateY(-2px); }
+  .flashcard .jp-sentence { font-size: 1.15rem; }
+  .flashcard .en-sentence { font-size: 1.25rem; }
+  .flashcard .reveal-ans {
+    font-size: 1.8rem;
+    color: #ff6b35;
+    font-weight: 700;
+    margin-top: 16px;
+  }
+  .flashcard .hint { font-size: 0.8rem; color: #999; margin-top: 12px; }
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  /* Record view */
+  .record-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .record-summary .box {
+    background: linear-gradient(135deg, #fff3e0, #ffe4d4);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .record-summary .val { font-size: 1.6rem; font-weight: 700; color: #ff6b35; }
+  .record-summary .lbl { font-size: 0.75rem; color: #666; margin-top: 2px; }
+  .today-card {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff9642, #ff6b35);
+    color: white;
+    margin-bottom: 20px;
+  }
+  .today-card h3 { font-size: 0.9rem; font-weight: 500; opacity: 0.9; margin-bottom: 8px; }
+  .today-card .today-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+  .today-card .today-stats div { font-size: 0.85rem; }
+  .today-card .today-stats b { font-size: 1.1rem; display: block; }
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .history-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #fafafa;
+    border-radius: 8px;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+  .history-row .date { font-weight: 600; color: #333; min-width: 90px; }
+  .history-row .bars { display: flex; gap: 4px; flex: 1; align-items: center; }
+  .history-row .bar-correct {
+    height: 10px;
+    background: linear-gradient(90deg, #66bb6a, #4caf50);
+    border-radius: 5px;
+    min-width: 2px;
+  }
+  .history-row .bar-wrong {
+    height: 10px;
+    background: linear-gradient(90deg, #ef5350, #e53935);
+    border-radius: 5px;
+    min-width: 2px;
+  }
+  .history-row .tot { color: #666; min-width: 60px; text-align: right; }
+  .history-row.today { background: #fff3e0; border: 1px solid #ffcc80; }
+  .streak-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.25);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .danger-btn {
+    background: #fff;
+    border: 1px solid #e57373;
+    color: #c62828;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #444;
+    margin: 16px 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  @media (max-width: 480px) {
+    body { padding: 8px; }
+    header { padding: 16px; border-radius: 12px 12px 0 0; }
+    main { padding: 16px 14px; }
+    nav button { font-size: 0.78rem; padding: 12px 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>英単語学習 (p.12-51)</h1>
+    <p>200語の穴埋め練習</p>
+    <div class="stats">
+      <span class="stat" id="stat-total">全200語</span>
+      <span class="stat" id="stat-correct">正解: 0</span>
+      <span class="stat" id="stat-wrong">間違い: 0</span>
+    </div>
+  </header>
+  <nav>
+    <button class="nav-btn active" data-mode="quiz">クイズ</button>
+    <button class="nav-btn" data-mode="flash">フラッシュ</button>
+    <button class="nav-btn" data-mode="browse">一覧</button>
+    <button class="nav-btn" data-mode="review">復習</button>
+    <button class="nav-btn" data-mode="record">記録</button>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<script src="words_data.js"></script>
+<script>
+// State
+const state = {
+  mode: 'quiz',
+  pageFilter: 'all',
+  currentIdx: 0,
+  answered: {},
+  wrongSet: new Set(),
+  quizList: [],
+  flashShowAns: false,
+  dailyLog: {},
+};
+
+// Load from localStorage
+try {
+  const saved = localStorage.getItem('vocab_app_state');
+  if (saved) {
+    const s = JSON.parse(saved);
+    state.answered = s.answered || {};
+    state.wrongSet = new Set(s.wrongSet || []);
+    state.dailyLog = s.dailyLog || {};
+  }
+} catch(e) {}
+
+function save() {
+  try {
+    localStorage.setItem('vocab_app_state', JSON.stringify({
+      answered: state.answered,
+      wrongSet: [...state.wrongSet],
+      dailyLog: state.dailyLog
+    }));
+  } catch(e) {}
+}
+
+// Daily log helpers
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function ensureToday() {
+  const k = todayKey();
+  if (!state.dailyLog[k]) {
+    state.dailyLog[k] = {studied:0, correct:0, wrong:0, mastered:0};
+  }
+  return state.dailyLog[k];
+}
+function logActivity(type) {
+  const log = ensureToday();
+  if (log[type] !== undefined) log[type]++;
+  save();
+}
+function computeStreak() {
+  const keys = Object.keys(state.dailyLog).filter(k => (state.dailyLog[k].studied||0) > 0).sort();
+  if (keys.length === 0) return 0;
+  let streak = 0;
+  const set = new Set(keys);
+  const curKey = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  let cur = new Date();
+  if (!set.has(curKey(cur))) cur.setDate(cur.getDate() - 1);
+  while (set.has(curKey(cur))) {
+    streak++;
+    cur.setDate(cur.getDate() - 1);
+  }
+  return streak;
+}
+
+// Helpers
+function getPages() {
+  return [...new Set(WORDS.map(w => w.page))];
+}
+function getFilteredWords() {
+  let list = WORDS;
+  if (state.pageFilter !== 'all') {
+    list = list.filter(w => w.page === state.pageFilter);
+  }
+  return list;
+}
+function updateStats() {
+  const total = WORDS.length;
+  const correctCount = Object.values(state.answered).filter(a => a.correct).length;
+  const wrongCount = state.wrongSet.size;
+  document.getElementById('stat-total').textContent = `全${total}語`;
+  document.getElementById('stat-correct').textContent = `正解: ${correctCount}`;
+  document.getElementById('stat-wrong').textContent = `間違い: ${wrongCount}`;
+}
+
+// Navigation
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+    state.currentIdx = 0;
+    state.flashShowAns = false;
+    render();
+  };
+});
+
+function pageSelectHTML() {
+  const pages = getPages();
+  let html = `<select id="page-select"><option value="all">全ページ</option>`;
+  for (const p of pages) {
+    const sel = p === state.pageFilter ? 'selected' : '';
+    html += `<option value="${p}" ${sel}>p.${p}</option>`;
+  }
+  html += `</select>`;
+  return html;
+}
+function attachPageSelect() {
+  const sel = document.getElementById('page-select');
+  if (sel) {
+    sel.onchange = () => {
+      state.pageFilter = sel.value;
+      state.currentIdx = 0;
+      state.flashShowAns = false;
+      render();
+    };
+  }
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ========== QUIZ MODE ==========
+function renderQuiz() {
+  const list = getFilteredWords();
+  if (state.quizList.length === 0 || !list.every(w => state.quizList.find(q => q.id === w.id))) {
+    state.quizList = list;
+  }
+  if (state.currentIdx >= state.quizList.length) state.currentIdx = 0;
+  const word = state.quizList[state.currentIdx];
+  const progress = ((state.currentIdx + 1) / state.quizList.length) * 100;
+
+  const main = document.getElementById('main');
+  main.innerHTML = `
+    <div class="filter-row">
+      <label>範囲:</label>
+      ${pageSelectHTML()}
+      <button class="btn btn-secondary" id="shuffle-btn">シャッフル</button>
+      <span style="margin-left:auto; font-size:0.85rem; color:#666;">
+        ${state.currentIdx + 1} / ${state.quizList.length}
+      </span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="card">
+      <span class="item-num">No.${String(word.id).padStart(3,'0')}</span>
+      <span class="page-label">p.${word.page}</span>
+      <div class="jp-sentence">${word.jp}</div>
+      <div class="en-sentence">${word.en}</div>
+      <div class="answer-box">
+        <input type="text" id="answer-input" placeholder="答えを入力してEnter" autocomplete="off" autocapitalize="none">
+        <button class="btn btn-primary" id="submit-btn">確認</button>
+      </div>
+      <div id="feedback-area"></div>
+      <div class="controls">
+        <div class="controls-left">
+          <button class="btn btn-secondary" id="prev-btn">← 前</button>
+        </div>
+        <div class="controls-right">
+          <button class="btn btn-secondary" id="reveal-btn">答えを見る</button>
+          <button class="btn btn-primary" id="next-btn">次 →</button>
+        </div>
+      </div>
+    </div>
+  `;
+  attachPageSelect();
+  const input = document.getElementById('answer-input');
+  const submitBtn = document.getElementById('submit-btn');
+  const revealBtn = document.getElementById('reveal-btn');
+  const feedback = document.getElementById('feedback-area');
+  input.focus();
+
+  function checkAnswer() {
+    const userAns = input.value.trim().toLowerCase();
+    if (!userAns) return;
+    if (feedback.innerHTML) return;
+    const correct = userAns === word.ans.toLowerCase();
+    logActivity('studied');
+    if (correct) {
+      input.classList.add('correct');
+      input.classList.remove('wrong');
+      feedback.innerHTML = `<div class="feedback correct">✓ 正解！ 答え: <b>${word.ans}</b></div>`;
+      state.answered[word.id] = {correct: true, attempts: (state.answered[word.id]?.attempts || 0) + 1};
+      state.wrongSet.delete(word.id);
+      logActivity('correct');
+    } else {
+      input.classList.add('wrong');
+      input.classList.remove('correct');
+      feedback.innerHTML = `<div class="feedback wrong">✗ 不正解。 答え: <b>${word.ans}</b> (入力: ${input.value})</div>`;
+      state.answered[word.id] = {correct: false, attempts: (state.answered[word.id]?.attempts || 0) + 1};
+      state.wrongSet.add(word.id);
+      logActivity('wrong');
+    }
+    save();
+    updateStats();
+  }
+
+  submitBtn.onclick = checkAnswer;
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      if (feedback.innerHTML) {
+        document.getElementById('next-btn').click();
+      } else {
+        checkAnswer();
+      }
+    }
+  };
+  revealBtn.onclick = () => {
+    feedback.innerHTML = `<div class="feedback reveal">答え: <b>${word.ans}</b></div>`;
+    input.value = word.ans;
+  };
+  document.getElementById('next-btn').onclick = () => {
+    state.currentIdx = (state.currentIdx + 1) % state.quizList.length;
+    renderQuiz();
+  };
+  document.getElementById('prev-btn').onclick = () => {
+    state.currentIdx = (state.currentIdx - 1 + state.quizList.length) % state.quizList.length;
+    renderQuiz();
+  };
+  document.getElementById('shuffle-btn').onclick = () => {
+    state.quizList = shuffleArray(getFilteredWords());
+    state.currentIdx = 0;
+    renderQuiz();
+  };
+}
+
+// ========== FLASHCARD MODE ==========
+function renderFlash() {
+  const list = getFilteredWords();
+  if (state.currentIdx >= list.length) state.currentIdx = 0;
+  const word = list[state.currentIdx];
+  const progress = ((state.currentIdx + 1) / list.length) * 100;
+
+  const main = document.getElementById('main');
+  main.innerHTML = `
+    <div class="filter-row">
+      <label>範囲:</label>
+      ${pageSelectHTML()}
+      <span style="margin-left:auto; font-size:0.85rem; color:#666;">
+        ${state.currentIdx + 1} / ${list.length}
+      </span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="flashcard" id="flashcard-el">
+      <span class="item-num">No.${String(word.id).padStart(3,'0')}</span>
+      <div style="margin-top:16px;" class="jp-sentence">${word.jp}</div>
+      <div class="en-sentence">${word.en}</div>
+      ${state.flashShowAns ? `<div class="reveal-ans">${word.ans}</div>` : `<div class="hint">タップして答えを表示</div>`}
+    </div>
+    <div class="controls">
+      <div class="controls-left">
+        <button class="btn btn-secondary" id="prev-btn">← 前</button>
+      </div>
+      <div class="controls-right">
+        <button class="btn btn-secondary" id="mark-wrong">知らなかった</button>
+        <button class="btn btn-primary" id="next-btn">次 →</button>
+      </div>
+    </div>
+  `;
+  attachPageSelect();
+  document.getElementById('flashcard-el').onclick = () => {
+    state.flashShowAns = !state.flashShowAns;
+    renderFlash();
+  };
+  document.getElementById('next-btn').onclick = () => {
+    state.currentIdx = (state.currentIdx + 1) % list.length;
+    state.flashShowAns = false;
+    renderFlash();
+  };
+  document.getElementById('prev-btn').onclick = () => {
+    state.currentIdx = (state.currentIdx - 1 + list.length) % list.length;
+    state.flashShowAns = false;
+    renderFlash();
+  };
+  document.getElementById('mark-wrong').onclick = () => {
+    state.wrongSet.add(word.id);
+    state.answered[word.id] = {correct: false, attempts: (state.answered[word.id]?.attempts || 0) + 1};
+    logActivity('studied');
+    logActivity('wrong');
+    save();
+    updateStats();
+    state.currentIdx = (state.currentIdx + 1) % list.length;
+    state.flashShowAns = false;
+    renderFlash();
+  };
+}
+
+// ========== BROWSE MODE ==========
+function renderBrowse() {
+  const list = getFilteredWords();
+  const main = document.getElementById('main');
+  main.innerHTML = `
+    <div class="filter-row">
+      <label>範囲:</label>
+      ${pageSelectHTML()}
+      <span style="margin-left:auto; font-size:0.85rem; color:#666;">
+        ${list.length}語
+      </span>
+    </div>
+    <div class="browse-list" id="browse-list"></div>
+  `;
+  attachPageSelect();
+  const listEl = document.getElementById('browse-list');
+  for (const w of list) {
+    const marked = state.wrongSet.has(w.id);
+    const div = document.createElement('div');
+    div.className = 'browse-item' + (marked ? ' wrong-marked' : '');
+    div.innerHTML = `
+      <span class="num">${String(w.id).padStart(3,'0')}</span>
+      <span class="jp">${w.jp}</span>
+      <span class="ans">${w.ans}</span>
+    `;
+    listEl.appendChild(div);
+  }
+}
+
+// ========== REVIEW MODE ==========
+function renderReview() {
+  const wrongList = WORDS.filter(w => state.wrongSet.has(w.id));
+  const main = document.getElementById('main');
+  if (wrongList.length === 0) {
+    main.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🎉</div>
+        <p>間違えた単語はまだありません</p>
+        <p style="font-size:0.85rem; margin-top:8px;">クイズモードで問題を解いていくと、間違えた単語がここに表示されます</p>
+      </div>
+    `;
+    return;
+  }
+  if (state.currentIdx >= wrongList.length) state.currentIdx = 0;
+  const word = wrongList[state.currentIdx];
+  const progress = ((state.currentIdx + 1) / wrongList.length) * 100;
+  main.innerHTML = `
+    <div class="filter-row">
+      <strong style="color:#c62828;">間違えた単語: ${wrongList.length}語</strong>
+      <span style="margin-left:auto; font-size:0.85rem; color:#666;">
+        ${state.currentIdx + 1} / ${wrongList.length}
+      </span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="card">
+      <span class="item-num">No.${String(word.id).padStart(3,'0')}</span>
+      <span class="page-label">p.${word.page}</span>
+      <div class="jp-sentence">${word.jp}</div>
+      <div class="en-sentence">${word.en}</div>
+      <div class="answer-box">
+        <input type="text" id="answer-input" placeholder="答えを入力してEnter" autocomplete="off" autocapitalize="none">
+        <button class="btn btn-primary" id="submit-btn">確認</button>
+      </div>
+      <div id="feedback-area"></div>
+      <div class="controls">
+        <div class="controls-left">
+          <button class="btn btn-secondary" id="prev-btn">← 前</button>
+        </div>
+        <div class="controls-right">
+          <button class="btn btn-secondary" id="mark-done">覚えた ✓</button>
+          <button class="btn btn-primary" id="next-btn">次 →</button>
+        </div>
+      </div>
+    </div>
+  `;
+  const input = document.getElementById('answer-input');
+  const feedback = document.getElementById('feedback-area');
+  input.focus();
+  document.getElementById('submit-btn').onclick = () => {
+    const userAns = input.value.trim().toLowerCase();
+    if (!userAns) return;
+    if (feedback.innerHTML) return;
+    logActivity('studied');
+    if (userAns === word.ans.toLowerCase()) {
+      input.classList.add('correct'); input.classList.remove('wrong');
+      feedback.innerHTML = `<div class="feedback correct">✓ 正解！ 「覚えた」ボタンで復習リストから外せます</div>`;
+      logActivity('correct');
+    } else {
+      input.classList.add('wrong'); input.classList.remove('correct');
+      feedback.innerHTML = `<div class="feedback wrong">✗ 答え: <b>${word.ans}</b></div>`;
+      logActivity('wrong');
+    }
+    save();
+  };
+  input.onkeydown = (e) => { if (e.key === 'Enter') document.getElementById('submit-btn').click(); };
+  document.getElementById('mark-done').onclick = () => {
+    state.wrongSet.delete(word.id);
+    state.answered[word.id] = {correct: true, attempts: (state.answered[word.id]?.attempts || 0) + 1};
+    logActivity('mastered');
+    save(); updateStats();
+    if (state.currentIdx >= wrongList.length - 1) state.currentIdx = 0;
+    renderReview();
+  };
+  document.getElementById('next-btn').onclick = () => {
+    state.currentIdx = (state.currentIdx + 1) % wrongList.length;
+    renderReview();
+  };
+  document.getElementById('prev-btn').onclick = () => {
+    state.currentIdx = (state.currentIdx - 1 + wrongList.length) % wrongList.length;
+    renderReview();
+  };
+}
+
+// ========== RECORD MODE ==========
+function formatDate(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const wk = ['日','月','火','水','木','金','土'][dt.getDay()];
+  return `${m}/${d} (${wk})`;
+}
+function renderRecord() {
+  const main = document.getElementById('main');
+  const keys = Object.keys(state.dailyLog).sort();
+  const tkey = todayKey();
+  const today = state.dailyLog[tkey] || {studied:0, correct:0, wrong:0, mastered:0};
+  const streak = computeStreak();
+
+  const totalDays = keys.filter(k => (state.dailyLog[k].studied||0) > 0).length;
+  const totalStudied = keys.reduce((s,k) => s + (state.dailyLog[k].studied||0), 0);
+  const totalCorrect = keys.reduce((s,k) => s + (state.dailyLog[k].correct||0), 0);
+  const accuracy = totalStudied > 0 ? Math.round(totalCorrect / totalStudied * 100) : 0;
+  const todayAcc = today.studied > 0 ? Math.round(today.correct/today.studied*100) : 0;
+
+  const recentKeys = keys.slice(-30).reverse();
+  const maxStudied = Math.max(1, ...recentKeys.map(k => state.dailyLog[k].studied || 0));
+
+  let historyHtml = '';
+  if (recentKeys.length === 0) {
+    historyHtml = `<div class="empty-state"><div class="icon">📝</div><p>まだ記録がありません</p><p style="font-size:0.85rem; margin-top:8px;">クイズや復習をすると、ここに毎日の記録が表示されます</p></div>`;
+  } else {
+    historyHtml = '<div class="history-list">';
+    for (const k of recentKeys) {
+      const log = state.dailyLog[k];
+      const c = log.correct || 0;
+      const w = log.wrong || 0;
+      const s = log.studied || 0;
+      const isToday = k === tkey;
+      const cPct = (c / maxStudied) * 100;
+      const wPct = (w / maxStudied) * 100;
+      historyHtml += `
+        <div class="history-row ${isToday ? 'today' : ''}">
+          <span class="date">${formatDate(k)}${isToday ? ' <b style="color:#ff6b35;">今日</b>' : ''}</span>
+          <span class="bars">
+            ${c > 0 ? `<span class="bar-correct" style="width:${cPct}%" title="正解 ${c}"></span>` : ''}
+            ${w > 0 ? `<span class="bar-wrong" style="width:${wPct}%" title="不正解 ${w}"></span>` : ''}
+          </span>
+          <span class="tot">${s}問 ${s>0 ? `(${Math.round(c/s*100)}%)` : ''}</span>
+        </div>
+      `;
+    }
+    historyHtml += '</div>';
+  }
+
+  main.innerHTML = `
+    <div class="today-card">
+      <h3>今日の学習 ${streak > 0 ? `<span class="streak-badge">🔥 ${streak}日連続</span>` : ''}</h3>
+      <div class="today-stats">
+        <div><b>${today.studied}</b>解答数</div>
+        <div><b>${today.correct}</b>正解</div>
+        <div><b>${today.wrong}</b>不正解</div>
+        <div><b>${today.mastered}</b>覚えた</div>
+        <div><b>${todayAcc}%</b>正答率</div>
+      </div>
+    </div>
+
+    <div class="record-summary">
+      <div class="box">
+        <div class="val">${totalDays}</div>
+        <div class="lbl">学習した日数</div>
+      </div>
+      <div class="box">
+        <div class="val">${totalStudied}</div>
+        <div class="lbl">累計解答数</div>
+      </div>
+      <div class="box">
+        <div class="val">${accuracy}%</div>
+        <div class="lbl">累計正答率</div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <span>履歴 (直近30日)</span>
+      ${recentKeys.length > 0 ? `<button class="danger-btn" id="clear-record">記録をリセット</button>` : ''}
+    </div>
+    ${historyHtml}
+  `;
+
+  const clearBtn = document.getElementById('clear-record');
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      if (confirm('すべての日々の記録を削除しますか？\n(単語の学習状況は残ります)')) {
+        state.dailyLog = {};
+        save();
+        renderRecord();
+      }
+    };
+  }
+}
+
+// Router
+function render() {
+  if (state.mode === 'quiz') renderQuiz();
+  else if (state.mode === 'flash') renderFlash();
+  else if (state.mode === 'browse') renderBrowse();
+  else if (state.mode === 'review') renderReview();
+  else if (state.mode === 'record') renderRecord();
+}
+
+// Init
+updateStats();
+render();
+</script>
+</body>
+</html>
